@@ -1,25 +1,20 @@
-# Food Street — playable Unity prototype
+# Pizza Master — original 3D restaurant game prototype
 
-Original 3D restaurant game prototype for Android and iOS, built in Unity C#.
+Unity C# project for Android and iOS. The inspiration is the genre of light, smooth idle restaurant management: make pizzas, serve a queue, earn money, hire a helper and upgrade equipment. This project uses original code, title and generated placeholder geometry. It does not include assets, levels, UI, text, music or source code from Pizza Ready!.
 
-## Art direction
+## Current playable mechanics
 
-Aim for a sophisticated night-market restaurant: charcoal stone, walnut cabinetry, brass hardware, warm practical lights, adult staff and customers, and a restrained dark UI. The current scene generates a first pass of these shapes in code. The final visual target requires original textured 3D models, character rigs and animation, baked lighting, authored UI, and device profiling. The concept render is art direction only and is not a screenshot or in-game asset.
+- Drag to move the owner around a bright 3D restaurant (WASD in the Editor).
+- Stand at the red oven pad to bake pizzas and fill the carrying tray.
+- Take pizza to the blue service pad to serve customers and earn cash.
+- Visit gold, green and red upgrade pads to expand tray capacity, hire an automatic serving helper and speed up cooking.
+- Queue length, customer patience, shop levels and offline staff earnings.
+- Save cash, upgrades and progress locally between sessions.
 
-## Play in the Editor
+## Open and build
 
-1. Install Unity Hub and Unity **2022.3 LTS** with Android Build Support. For iPhone builds, also use a Mac with Xcode and Unity iOS Build Support.
-2. Open this folder as a Unity project. On first opening, let packages import.
-3. In the top menu choose **Food Street > Create Playable Scene**; then press Play.
-4. Use WASD or arrow keys in the Editor. On a phone, drag a finger on the left half of the screen.
-5. Walk to the pink counter to cook pizza, the gold counter to serve waiting customers, and the green pad to buy a tray upgrade.
+Install Unity 2022.3 LTS with Android Build Support. Open the repository as a Unity project. Choose **Pizza Master > Create Playable Scene**, then press Play. The `BuildGame.Android` command creates the scene and builds a debug APK when Android support is installed. The manual GitHub Action needs a Unity license activated in repository secrets. `BuildGame.Ios` exports an Xcode project; installing on an iPhone needs a Mac, Xcode and Apple signing.
 
-## Build
+## Status
 
-In File > Build Settings select Android, Switch Platform, then Build (APK for direct testing; AAB for Play Store later). For iPhone select iOS, Switch Platform, Build, then open the generated Xcode project on a Mac and sign it with your Apple developer team. Add the generated FoodStreet scene to Scenes In Build if Unity does not list it automatically.
-
-For automation, `BuildGame.Android` creates the scene and builds a debug-signed APK. The supplied GitHub Actions workflow requires an activated Unity license in repository secrets before it can build. `BuildGame.Ios` creates an Xcode project; an installable iPhone app requires Apple signing and a macOS/Xcode build.
-
-## Prototype status
-
-This is a first playable mechanics build with procedural placeholder art, **not** the finished high-graphics game. It does not contain ads, purchases, analytics, a store listing, or completed Android/iOS device testing. Ads should be integrated with test ad unit IDs first, after the core gameplay has been tested. Replace placeholder art with licensed original models, animations, textures, lighting and UI for the final visual target.
+This is a mechanics prototype with generated geometry, not a tested APK/IPA or finished game. It needs authored original 3D characters, food models, animations, interface, sound, device optimization, ads integration and on-device testing. No ad SDK, payments or store release is included yet.
