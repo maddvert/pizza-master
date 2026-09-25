@@ -8,6 +8,9 @@ public sealed class PizzaMasterGame : MonoBehaviour
     readonly List<Guest> line = new List<Guest>();
     Transform player, helper, tray;
     float strideClock;
+    readonly List<Transform> beltPizzas = new List<Transform>();
+    float beltTimer, beltPhase;
+    int counterStock;
     readonly List<GameObject> carriedPizzas = new List<GameObject>();
     Material cream, tile, tomato, mint, blue, crust, topping, skin, uniform, black, gold, wood, leaf, glass;
     Texture2D panel;
@@ -118,10 +121,10 @@ public sealed class PizzaMasterGame : MonoBehaviour
             }
         }
         // Distinct preparation table and service counter make the route legible.
-        Cube("Prep table",new Vector3(-3.8f,.65f,5.25f),new Vector3(3.1f,.16f,1.25f),wood);
+        Cube("Prep table",new Vector3(-6.15f,.65f,5.25f),new Vector3(1.35f,.16f,1.25f),wood);
         for(int i=0;i<3;i++)
         {
-            float x=-4.5f+i*.7f;
+            float x=-6.55f+i*.4f;
             Pizza(new Vector3(x,.81f,5.25f));
         }
         Cube("Cash register",new Vector3(3.8f,1.22f,2.9f),new Vector3(.66f,.32f,.43f),black);
@@ -174,6 +177,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         Cube("Staff hiring",new Vector3(0,.16f,-5.2f),new Vector3(2.35f,.08f,1.8f),mint);
         Cube("Kitchen upgrade",new Vector3(4,.16f,-5.2f),new Vector3(2.35f,.08f,1.8f),tomato);
         DecorateRestaurant();
+        BuildConveyor();
         for(int n=0;n<3;n++)
         {
             Pizza(new Vector3(-4.45f+n*.65f,1.13f,2.8f));
@@ -196,6 +200,45 @@ public sealed class PizzaMasterGame : MonoBehaviour
         sun.type=LightType.Directional;sun.color=new Color(1f,.95f,.85f);sun.intensity=1.1f;
         sun.transform.rotation=Quaternion.Euler(48,-28,0);
         SpawnGuest();Save();
+    }
+    void BuildConveyor()
+    {
+        // A continuously running kitchen belt visibly carries finished pizzas
+        // from the oven toward the pickup area.
+        Cube("Conveyor frame",new Vector3(-3.8f,.88f,5.15f),new Vector3(1.35f,.28f,4.65f),blue);
+        Cube("Dark moving belt",new Vector3(-3.8f,1.04f,5.15f),new Vector3(1.07f,.035f,4.35f),black);
+        foreach(float x in new[]{-4.48f,-3.12f})
+            Cube("Conveyor rail",new Vector3(x,1.22f,5.15f),new Vector3(.12f,.35f,4.7f),uniform);
+        for(int i=0;i<5;i++)
+            Cube("Conveyor roller",new Vector3(-3.8f,1.07f,3.25f+i*.9f),
+                new Vector3(1.04f,.025f,.055f),glass);
+        Cube("Pickup display",new Vector3(-3.8f,.88f,2.75f),new Vector3(2.5f,.17f,.85f),uniform);
+    }
+    void RunConveyor(float dt)
+    {
+        beltPhase+=dt;
+        if(counterStock+beltPizzas.Count<5)
+        {
+            beltTimer+=dt;
+            if(beltTimer>=2.1f)
+            {
+                beltTimer=0;
+                beltPizzas.Add(Pizza(new Vector3(-3.8f,1.17f,7f)));
+            }
+        }
+        for(int i=beltPizzas.Count-1;i>=0;i--)
+        {
+            var pizza=beltPizzas[i];
+            if(pizza==null){beltPizzas.RemoveAt(i);continue;}
+            pizza.position=Vector3.MoveTowards(pizza.position,
+                new Vector3(-3.8f,1.17f,3.2f),dt*1.25f);
+            if(pizza.position.z<=3.21f)
+            {
+                counterStock++;
+                Destroy(pizza.gameObject);
+                beltPizzas.RemoveAt(i);
+            }
+        }
     }
     void Counter(string name,Vector3 pos,Material accent)
     {
@@ -237,6 +280,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
     void Update()
     {
         float dt=Time.deltaTime;
+        RunConveyor(dt);
         Vector2 input=new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical"));
         if(Input.touchCount==0 && Input.GetMouseButton(0))
         {
@@ -265,11 +309,11 @@ public sealed class PizzaMasterGame : MonoBehaviour
             strideClock+=dt*11;
             player.position+=Vector3.up*Mathf.Abs(Mathf.Sin(strideClock))*.028f;
         }
-        if(Vector3.Distance(player.position,new Vector3(-3.8f,.83f,.75f))<1.7f&&carry<capacity)
+        if(Vector3.Distance(player.position,new Vector3(-3.8f,.83f,.75f))<1.7f&&carry<capacity&&counterStock>0)
         {
             cookClock+=dt;
             if(cookClock>=Mathf.Max(.9f,2.6f-speedLevel*.35f))
-            {cookClock=0;carry++;RefreshTray();Notice("PIZZA READY  •  TAKE IT TO SERVICE");}
+            {cookClock=0;counterStock--;carry++;RefreshTray();Notice("PIZZA READY  •  TAKE IT TO SERVICE");}
         }
         else cookClock=0;
         serveClock-=dt;
@@ -320,7 +364,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         GUI.color=new Color(.18f,.18f,.2f,.86f);GUI.DrawTexture(header,Texture2D.whiteTexture);
         GUI.color=oldColor;
         GUI.Label(new Rect(24*s,15*s,Screen.width-48*s,36*s),
-            "$"+money+"    LEVEL "+level+"    PIZZA "+carry+"/"+capacity+"    QUEUE "+line.Count,body);
+            "$"+money+"    LV "+level+"    TRAY "+carry+"/"+capacity+"    READY "+counterStock,body);
         if(cookClock>0)
         {
             float duration=Mathf.Max(.9f,2.6f-speedLevel*.35f);
