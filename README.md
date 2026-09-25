@@ -13,7 +13,7 @@ Unity C# project for Android and iOS. The inspiration is the genre of light, smo
 
 ## Open and build
 
-Install Unity 2022.3 LTS with Android Build Support. Open the repository as a Unity project. Choose **Pizza Master > Create Playable Scene**, then press Play. The `BuildGame.Android` command creates the scene and builds a debug APK when Android support is installed. The manual GitHub Action needs a Unity license activated in repository secrets. `BuildGame.Ios` exports an Xcode project; installing on an iPhone needs a Mac, Xcode and Apple signing.
+Install Unity 2022.3 LTS with Android Build Support. Open the repository as a Unity project. Choose **Pizza Master > Create Playable Scene**, then press Play. The `BuildGame.Android` command creates the scene and builds a debug APK when Android support is installed. `BuildGame.Ios` exports an Xcode project; installing on an iPhone needs a Mac, Xcode and Apple signing. Do not put Unity account credentials into GitHub Actions secrets for third-party build actions.
 
 ## Status
 
