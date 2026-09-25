@@ -6,7 +6,8 @@ public sealed class PizzaMasterGame : MonoBehaviour
 {
     sealed class Guest { public Transform avatar; public float patience; }
     readonly List<Guest> line = new List<Guest>();
-    Transform player, helper;
+    Transform player, helper, tray;
+    readonly List<GameObject> carriedPizzas = new List<GameObject>();
     Material cream, tile, tomato, mint, blue, crust, topping, skin, uniform, black, gold;
     Texture2D panel;
     float spawnClock, cookClock, serveClock, helperClock, messageUntil;
@@ -97,6 +98,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         }
         player=Person("Player",new Vector3(0,.83f,-1.7f),tomato);
         Cube("Apron",player.position+new Vector3(0,-.06f,-.25f),new Vector3(.5f,.7f,.05f),uniform,player);
+        tray=Cube("Carry tray",player.position+new Vector3(0,.68f,-.55f),new Vector3(.9f,.06f,.7f),black,player);
         if(staff>0)CreateHelper();
         var cameraObj=new GameObject("Main Camera");cameraObj.tag="MainCamera";
         var camera=cameraObj.AddComponent<Camera>();camera.orthographic=true;camera.orthographicSize=12;
@@ -135,10 +137,29 @@ public sealed class PizzaMasterGame : MonoBehaviour
         PlayerPrefs.Save();
     }
     void Notice(string text){message=text;messageUntil=Time.time+2.8f;}
+    void RefreshTray()
+    {
+        foreach(var pizza in carriedPizzas) Destroy(pizza);
+        carriedPizzas.Clear();
+        // Stack a visible pizza for each order in the tray.
+        for(int i=0;i<carry;i++)
+        {
+            var pizza=Ball("Carried pizza",tray.position+new Vector3(0,.09f+i*.11f,0),
+                new Vector3(.55f,.08f,.55f),crust,tray);
+            var sauce=Ball("Tomato sauce",pizza.position+Vector3.up*.045f,
+                new Vector3(.43f,.025f,.43f),topping,pizza);
+            carriedPizzas.Add(pizza.gameObject);
+        }
+    }
     void Update()
     {
         float dt=Time.deltaTime;
         Vector2 input=new Vector2(Input.GetAxisRaw("Horizontal"),Input.GetAxisRaw("Vertical"));
+        if(Input.touchCount==0 && Input.GetMouseButton(0))
+        {
+            if(dragFinger<0){dragFinger=0;dragStart=Input.mousePosition;}
+            input=Vector2.ClampMagnitude(((Vector2)Input.mousePosition-dragStart)/90f,1);
+        }
         for(int i=0;i<Input.touchCount;i++)
         {
             var t=Input.GetTouch(i);
@@ -148,7 +169,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
             if(t.phase==TouchPhase.Ended||t.phase==TouchPhase.Canceled)dragFinger=-1;
             else{dragNow=t.position;input=Vector2.ClampMagnitude((dragNow-dragStart)/90f,1);}
         }
-        if(Input.touchCount==0)dragFinger=-1;
+        if(Input.touchCount==0 && !Input.GetMouseButton(0))dragFinger=-1;
         Vector3 goal=new Vector3(input.x,0,input.y);
         velocity=Vector3.Lerp(velocity,goal*5.2f,Mathf.Clamp01(dt*10));
         player.position+=velocity*dt;
@@ -158,12 +179,12 @@ public sealed class PizzaMasterGame : MonoBehaviour
         {
             cookClock+=dt;
             if(cookClock>=Mathf.Max(.9f,2.6f-speedLevel*.35f))
-            {cookClock=0;carry++;Notice("PIZZA READY  •  TAKE IT TO SERVICE");}
+            {cookClock=0;carry++;RefreshTray();Notice("PIZZA READY  •  TAKE IT TO SERVICE");}
         }
         else cookClock=0;
         serveClock-=dt;
         if(serveClock<=0&&carry>0&&line.Count>0&&Vector3.Distance(player.position,new Vector3(3.8f,.83f,.75f))<1.8f)
-        {serveClock=.8f;carry--;Serve();}
+        {serveClock=.8f;carry--;RefreshTray();Serve();}
         if(helper!=null)
         {
             helperClock+=dt;
