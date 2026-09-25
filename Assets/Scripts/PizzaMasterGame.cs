@@ -19,8 +19,9 @@ public sealed class PizzaMasterGame : MonoBehaviour
 
     Material Make(Color color)
     {
-        var shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        var material = new Material(shader);
+        var baseMaterial = Resources.Load<Material>("PizzaMasterBase");
+        var material = baseMaterial != null ? new Material(baseMaterial) :
+            new Material(Shader.Find("Standard") ?? Shader.Find("Sprites/Default"));
         material.color = color;
         return material;
     }
@@ -100,11 +101,16 @@ public sealed class PizzaMasterGame : MonoBehaviour
         Cube("Apron",player.position+new Vector3(0,-.06f,-.25f),new Vector3(.5f,.7f,.05f),uniform,player);
         tray=Cube("Carry tray",player.position+new Vector3(0,.68f,-.55f),new Vector3(.9f,.06f,.7f),black,player);
         if(staff>0)CreateHelper();
-        var cameraObj=new GameObject("Main Camera");cameraObj.tag="MainCamera";
-        var camera=cameraObj.AddComponent<Camera>();camera.orthographic=true;camera.orthographicSize=12;
-        camera.backgroundColor=new Color(.7f,.86f,.9f);
-        camera.transform.position=new Vector3(0,17,-12);
-        camera.transform.rotation=Quaternion.Euler(53,0,0);
+        var camera=Camera.main;
+        if(camera==null)
+        {
+            var cameraObj=new GameObject("Main Camera");cameraObj.tag="MainCamera";
+            camera=cameraObj.AddComponent<Camera>();camera.orthographic=true;camera.orthographicSize=12;
+            camera.clearFlags=CameraClearFlags.SolidColor;
+            camera.backgroundColor=new Color(.7f,.86f,.9f);
+            camera.transform.position=new Vector3(0,17,-12);
+            camera.transform.rotation=Quaternion.Euler(53,0,0);
+        }
         var sun=new GameObject("Sunlight").AddComponent<Light>();
         sun.type=LightType.Directional;sun.color=new Color(1f,.95f,.85f);sun.intensity=1.1f;
         sun.transform.rotation=Quaternion.Euler(48,-28,0);
