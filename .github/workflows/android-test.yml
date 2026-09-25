@@ -1,0 +1,26 @@
+name: Android test build
+on:
+  workflow_dispatch:
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build test APK
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          targetPlatform: Android
+          buildMethod: BuildGame.Android
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FoodStreet-Android-test
+          path: build/FoodStreet-test.apk
+          if-no-files-found: error
