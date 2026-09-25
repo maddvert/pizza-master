@@ -7,6 +7,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
     sealed class Guest { public Transform avatar; public float patience; }
     readonly List<Guest> line = new List<Guest>();
     Transform player, helper, tray;
+    float strideClock;
     readonly List<GameObject> carriedPizzas = new List<GameObject>();
     Material cream, tile, tomato, mint, blue, crust, topping, skin, uniform, black, gold, wood, leaf, glass;
     Texture2D panel;
@@ -44,11 +45,44 @@ public sealed class PizzaMasterGame : MonoBehaviour
     Transform Person(string name, Vector3 pos, Material shirt)
     {
         var root=new GameObject(name).transform;root.position=pos;
-        Cube("Shirt",pos,new Vector3(.64f,1.05f,.46f),shirt,root);
-        Ball("Head",pos+Vector3.up*.79f,new Vector3(.56f,.57f,.55f),skin,root);
-        Cube("Left leg",pos+new Vector3(-.18f,-.7f,0),new Vector3(.2f,.47f,.24f),black,root);
-        Cube("Right leg",pos+new Vector3(.18f,-.7f,0),new Vector3(.2f,.47f,.24f),black,root);
+        Capsule("Tunic",pos,new Vector3(.65f,.9f,.5f),shirt,root);
+        Ball("Head",pos+Vector3.up*.78f,new Vector3(.58f,.62f,.57f),skin,root);
+        Ball("Hair",pos+Vector3.up*1.02f,new Vector3(.59f,.22f,.58f),black,root);
+        Ball("Left eye",pos+new Vector3(-.12f,.81f,-.27f),new Vector3(.055f,.07f,.035f),black,root);
+        Ball("Right eye",pos+new Vector3(.12f,.81f,-.27f),new Vector3(.055f,.07f,.035f),black,root);
+        Capsule("Left arm",pos+new Vector3(-.43f,-.05f,0),new Vector3(.22f,.65f,.23f),skin,root);
+        Capsule("Right arm",pos+new Vector3(.43f,-.05f,0),new Vector3(.22f,.65f,.23f),skin,root);
+        Capsule("Left leg",pos+new Vector3(-.17f,-.62f,0),new Vector3(.19f,.5f,.22f),black,root);
+        Capsule("Right leg",pos+new Vector3(.17f,-.62f,0),new Vector3(.19f,.5f,.22f),black,root);
         return root;
+    }
+    Transform Capsule(string name,Vector3 pos,Vector3 size,Material mat,Transform parent=null)
+    {
+        var obj=GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        obj.name=name;obj.transform.position=pos;obj.transform.localScale=size;
+        obj.GetComponent<Renderer>().sharedMaterial=mat;
+        if(parent)obj.transform.SetParent(parent,true);
+        return obj.transform;
+    }
+    Transform Pizza(Vector3 pos,Transform parent=null)
+    {
+        var baseObject=GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        baseObject.name="Pizza";baseObject.transform.position=pos;
+        baseObject.transform.localScale=new Vector3(.55f,.055f,.55f);
+        baseObject.GetComponent<Renderer>().sharedMaterial=crust;
+        if(parent)baseObject.transform.SetParent(parent,true);
+        var sauce=GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        sauce.name="Sauce";sauce.transform.position=pos+Vector3.up*.061f;
+        sauce.transform.localScale=new Vector3(.43f,.009f,.43f);
+        sauce.GetComponent<Renderer>().sharedMaterial=topping;
+        sauce.transform.SetParent(baseObject.transform,true);
+        for(int i=0;i<5;i++)
+        {
+            float angle=i*1.2566f+.3f;
+            var offset=new Vector3(Mathf.Cos(angle)*.28f,.085f,Mathf.Sin(angle)*.28f);
+            Ball("Basil",pos+offset,new Vector3(.11f,.027f,.065f),leaf,baseObject.transform);
+        }
+        return baseObject.transform;
     }
     void Label(string text,Vector3 pos,Color color,float scale)
     {
@@ -56,7 +90,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         mesh.text=text;mesh.anchor=TextAnchor.MiddleCenter;mesh.alignment=TextAlignment.Center;
         mesh.fontSize=64;mesh.characterSize=scale;mesh.color=color;
         mesh.transform.position=pos;
-        mesh.transform.rotation=Quaternion.identity;
+        mesh.transform.rotation=Quaternion.Euler(0,180,0);
     }
     void DecorateRestaurant()
     {
@@ -88,8 +122,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         for(int i=0;i<3;i++)
         {
             float x=-4.5f+i*.7f;
-            var dough=Ball("Fresh dough",new Vector3(x,.81f,5.25f),new Vector3(.48f,.09f,.48f),crust);
-            Ball("Sauce",dough.position+Vector3.up*.05f,new Vector3(.35f,.035f,.35f),topping);
+            Pizza(new Vector3(x,.81f,5.25f));
         }
         Cube("Cash register",new Vector3(3.8f,1.22f,2.9f),new Vector3(.66f,.32f,.43f),black);
         Cube("Register screen",new Vector3(3.8f,1.34f,2.67f),new Vector3(.46f,.17f,.03f),glass);
@@ -143,9 +176,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         DecorateRestaurant();
         for(int n=0;n<3;n++)
         {
-            var p=Ball("Pizza",new Vector3(-4.45f+n*.65f,1.13f,2.8f),new Vector3(.55f,.09f,.55f),crust);
-            Ball("Sauce",p.position+Vector3.up*.06f,new Vector3(.42f,.04f,.42f),topping);
-            Ball("Basil",p.position+new Vector3(.12f,.095f,.1f),new Vector3(.09f,.03f,.12f),leaf);
+            Pizza(new Vector3(-4.45f+n*.65f,1.13f,2.8f));
         }
         player=Person("Player",new Vector3(0,.83f,-1.7f),tomato);
         Cube("Apron",player.position+new Vector3(0,-.06f,-.25f),new Vector3(.5f,.7f,.05f),uniform,player);
@@ -200,13 +231,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
         // Stack a visible pizza for each order in the tray.
         for(int i=0;i<carry;i++)
         {
-            var pizza=Ball("Carried pizza",tray.position+new Vector3(0,.09f+i*.11f,0),
-                new Vector3(.55f,.08f,.55f),crust,tray);
-            Ball("Tomato sauce",pizza.position+Vector3.up*.045f,
-                new Vector3(.43f,.025f,.43f),topping,pizza);
-            Ball("Basil",pizza.position+new Vector3(.12f,.065f,.08f),
-                new Vector3(.08f,.025f,.11f),leaf,pizza);
-            carriedPizzas.Add(pizza.gameObject);
+            carriedPizzas.Add(Pizza(tray.position+new Vector3(0,.09f+i*.11f,0),tray).gameObject);
         }
     }
     void Update()
@@ -230,11 +255,16 @@ public sealed class PizzaMasterGame : MonoBehaviour
         if(Input.touchCount==0 && !Input.GetMouseButton(0))dragFinger=-1;
         // The camera looks into the restaurant from the entrance. Match drag-up
         // to the player's forward route as seen on the phone.
-        Vector3 goal=new Vector3(input.x,0,-input.y);
+        Vector3 goal=new Vector3(input.x,0,input.y);
         velocity=Vector3.Lerp(velocity,goal*5.2f,Mathf.Clamp01(dt*10));
         player.position+=velocity*dt;
         player.position=new Vector3(Mathf.Clamp(player.position.x,-6.9f,6.9f),.83f,Mathf.Clamp(player.position.z,-8.7f,7f));
-        if(velocity.sqrMagnitude>.05f)player.rotation=Quaternion.Slerp(player.rotation,Quaternion.LookRotation(velocity),dt*10);
+        if(velocity.sqrMagnitude>.05f)
+        {
+            player.rotation=Quaternion.Slerp(player.rotation,Quaternion.LookRotation(velocity),dt*10);
+            strideClock+=dt*11;
+            player.position+=Vector3.up*Mathf.Abs(Mathf.Sin(strideClock))*.028f;
+        }
         if(Vector3.Distance(player.position,new Vector3(-3.8f,.83f,.75f))<1.7f&&carry<capacity)
         {
             cookClock+=dt;
@@ -250,7 +280,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
             helperClock+=dt;
             helper.position=new Vector3(-5.5f+Mathf.Sin(Time.time*1.5f)*.35f,.83f,4.3f);
             if(helperClock>=Mathf.Max(2f,6f-staff*.65f))
-            {helperClock=0;if(line.Count>0){Serve();Notice("STAFF SERVED AN ORDER");}}
+            {helperClock=0;if(line.Count>0){Serve();Notice("STAFF PREPARED AND SERVED AN ORDER");}}
         }
         if(Vector3.Distance(player.position,new Vector3(-4,.83f,-5.2f))<1.4f&&money>=capacity*15)
         {money-=capacity*15;capacity++;player.position+=Vector3.forward*1.5f;Notice("TRAY CAPACITY +1");Save();}
