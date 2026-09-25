@@ -2,6 +2,10 @@
 
 Original 3D restaurant game prototype for Android and iOS, built in Unity C#.
 
+## Art direction
+
+Aim for a sophisticated night-market restaurant: charcoal stone, walnut cabinetry, brass hardware, warm practical lights, adult staff and customers, and a restrained dark UI. The current scene generates a first pass of these shapes in code. The final visual target requires original textured 3D models, character rigs and animation, baked lighting, authored UI, and device profiling. The concept render is art direction only and is not a screenshot or in-game asset.
+
 ## Play in the Editor
 
 1. Install Unity Hub and Unity **2022.3 LTS** with Android Build Support. For iPhone builds, also use a Mac with Xcode and Unity iOS Build Support.
