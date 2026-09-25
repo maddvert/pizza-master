@@ -8,10 +8,11 @@ public class FoodStreetGame : MonoBehaviour
     readonly List<Customer> customers = new List<Customer>();
     Transform player;
     Camera cam;
-    Material floor, dark, pink, amber, green, white, pizza;
+    Material floor, dark, pink, amber, green, white, pizza, brass, stone, wood, glass;
     float cookTimer, spawnTimer, toastUntil;
     int ready, cash, served, capacity = 2, upgradeCost = 25;
     string toast = "";
+    Texture2D panelTexture;
     Vector2 joystickOrigin, joystickCurrent;
     bool dragging;
     const float CookSeconds = 3.5f;
@@ -42,52 +43,93 @@ public class FoodStreetGame : MonoBehaviour
     void Start()
     {
         Application.targetFrameRate = 60;
+        panelTexture=new Texture2D(1,1);
+        panelTexture.SetPixel(0,0,new Color(.025f,.027f,.03f,.91f));panelTexture.Apply();
         cash = PlayerPrefs.GetInt("foodstreet.cash", 0);
         served = PlayerPrefs.GetInt("foodstreet.served", 0);
         capacity = PlayerPrefs.GetInt("foodstreet.capacity", 2);
         upgradeCost = PlayerPrefs.GetInt("foodstreet.upgradeCost", 25);
-        floor = Mat(new Color(.12f,.16f,.22f)); dark = Mat(new Color(.08f,.09f,.14f));
-        pink = Mat(new Color(1f,.24f,.51f)); amber = Mat(new Color(1f,.69f,.22f));
-        green = Mat(new Color(.26f,.9f,.72f)); white = Mat(new Color(.89f,.92f,.94f));
-        pizza = Mat(new Color(.95f,.43f,.13f));
-        RenderSettings.ambientLight = new Color(.7f,.7f,.86f);
-        Box("Restaurant floor", Vector3.zero, new Vector3(15,.2f,20), floor);
-        Box("Back wall", new Vector3(0,2.2f,9.9f), new Vector3(15,4.5f,.25f), dark);
+        floor = Mat(new Color(.075f,.075f,.078f)); dark = Mat(new Color(.025f,.03f,.036f));
+        pink = Mat(new Color(.35f,.13f,.105f)); amber = Mat(new Color(.82f,.53f,.24f),.68f);
+        green = Mat(new Color(.13f,.35f,.29f)); white = Mat(new Color(.83f,.79f,.68f));
+        pizza = Mat(new Color(.78f,.29f,.105f)); brass=Mat(new Color(.62f,.43f,.2f),.82f);
+        stone=Mat(new Color(.30f,.29f,.27f),.12f);wood=Mat(new Color(.17f,.085f,.055f),.08f);
+        glass=Mat(new Color(.13f,.2f,.22f),.55f);
+        RenderSettings.ambientLight = new Color(.38f,.35f,.31f);
+        Box("Polished stone floor", Vector3.zero, new Vector3(15,.2f,20), floor);
+        for(int x=-7;x<=7;x+=2) for(int z=-9;z<=9;z+=2)
+            Box("Stone floor slab",new Vector3(x,.111f,z),new Vector3(1.94f,.012f,1.94f),stone);
+        Box("Walnut feature wall", new Vector3(0,2.2f,9.9f), new Vector3(15,4.5f,.25f), wood);
         Box("Left wall", new Vector3(-7.4f,2.2f,0), new Vector3(.25f,4.5f,20), dark);
         Box("Right wall", new Vector3(7.4f,2.2f,0), new Vector3(.25f,4.5f,20), dark);
-        Box("Cook counter", new Vector3(-3.7f,.55f,2.5f), new Vector3(4,1.1f,2), pink);
-        Box("Serving counter", new Vector3(3.7f,.55f,2.5f), new Vector3(4,1.1f,2), amber);
-        Box("Upgrade pad", new Vector3(0,.05f,-5.3f), new Vector3(2.5,.1f,2.1f), green);
+        for(int i=0;i<7;i++) Box("Brass wall inlay",new Vector3(-6.5f+i*2.2f,2.3f,9.71f),new Vector3(.045f,3.8f,.04f),brass);
+        Box("Cook island walnut", new Vector3(-3.7f,.56f,2.5f), new Vector3(4,1.1f,2), wood);
+        Box("Cook island marble top",new Vector3(-3.7f,1.15f,2.5f),new Vector3(4.2f,.12f,2.2f),stone);
+        Box("Cook counter brass edging",new Vector3(-3.7f,1.06f,1.39f),new Vector3(4.2f,.035f,.04f),brass);
+        Box("Service island walnut", new Vector3(3.7f,.56f,2.5f), new Vector3(4,1.1f,2), wood);
+        Box("Service marble top",new Vector3(3.7f,1.15f,2.5f),new Vector3(4.2f,.12f,2.2f),stone);
+        Box("Service brass edging",new Vector3(3.7f,1.06f,1.39f),new Vector3(4.2f,.035f,.04f),brass);
+        Box("Upgrade station", new Vector3(0,.15f,-5.3f), new Vector3(2.5,.09f,2.1f), brass);
+        Box("Upgrade center", new Vector3(0,.2f,-5.3f), new Vector3(2.2f,.03f,1.8f), dark);
         for (int i=0;i<3;i++)
         {
-            Box("Ceiling lamp", new Vector3(-5+i*5,4.3f,2), new Vector3(1.4f,.1f,1.4f), amber);
-            Box("Floor detail", new Vector3(-5+i*5,.12f,-1), new Vector3(.09f,.02f,15), white);
+            var x=-5+i*5;
+            Box("Pendant stem",new Vector3(x,4.1f,2),new Vector3(.055f,.7f,.055f),brass);
+            Box("Pendant shade",new Vector3(x,3.72f,2),new Vector3(1.1f,.15f,1.1f),dark);
+            Box("Pendant diffuser",new Vector3(x,3.62f,2),new Vector3(.85f,.035f,.85f),amber);
+            var lamp=new GameObject("Warm pendant light").AddComponent<Light>();
+            lamp.type=LightType.Point;lamp.color=new Color(1f,.73f,.46f);lamp.range=6;lamp.intensity=2.0f;
+            lamp.transform.position=new Vector3(x,3.45f,2);
         }
-        Sphere("Pizza display", new Vector3(-3.7f,1.2f,2.5f), new Vector3(1.3f,.14f,1.3f), pizza);
+        Box("Pizza oven",new Vector3(-3.7f,1.85f,8.6f),new Vector3(3.2f,2.5f,1.6f),dark);
+        Box("Oven mouth",new Vector3(-3.7f,1.82f,7.77f),new Vector3(2.15f,1.05f,.08f),pizza);
+        Box("Oven opening",new Vector3(-3.7f,1.73f,7.71f),new Vector3(1.7f,.55f,.08f),dark);
+        Box("Oven brass crown",new Vector3(-3.7f,3.14f,7.7f),new Vector3(3.25f,.07f,.12f),brass);
+        Box("Tall drinks cooler",new Vector3(4.6f,1.8f,8.8f),new Vector3(2.6f,3.4f,1.5f),dark);
+        Box("Cooler glass",new Vector3(4.6f,1.85f,7.98f),new Vector3(2.2f,2.8f,.045f),glass);
+        for(int i=0;i<3;i++) Box("Cooler shelf",new Vector3(4.6f,.95f+i*.8f,7.94f),new Vector3(2.1f,.06f,.08f),brass);
+        Sphere("Fresh pizza",new Vector3(-3.7f,1.28f,2.5f),new Vector3(1.25f,.12f,1.25f),pizza);
+        for(int i=0;i<7;i++) Sphere("Topping",new Vector3(-3.7f+Random.Range(-.4f,.4f),1.36f,2.5f+Random.Range(-.4f,.4f)),new Vector3(.14f,.035f,.14f),green);
+        Sign("FOOD STREET",new Vector3(0,3.26f,9.54f),.4f,white);
+        Sign("PIZZA KITCHEN",new Vector3(-3.7f,2.9f,7.65f),.13f,amber);
         player = new GameObject("Player").transform;
         player.position = new Vector3(0,.9f,-2);
-        Box("Apron", player.position, new Vector3(.8f,1.2f,.55f), white, player);
-        Sphere("Head", player.position + Vector3.up*.88f, new Vector3(.68f,.68f,.68f), amber, player);
-        Box("Chef hat", player.position + Vector3.up*1.35f, new Vector3(.7f,.34f,.7f), white, player);
+        Box("Chef uniform", player.position, new Vector3(.72f,1.2f,.48f), dark, player);
+        Box("Apron", player.position+new Vector3(0,-.1f,-.26f),new Vector3(.61f,.9f,.05f),white,player);
+        Sphere("Head", player.position + Vector3.up*.86f, new Vector3(.58f,.64f,.58f), amber, player);
+        Box("Chef cap", player.position + Vector3.up*1.24f, new Vector3(.69f,.2f,.7f), dark, player);
+        Box("Left leg",player.position+new Vector3(-.2f,-.82f,0),new Vector3(.21f,.48f,.25f),dark,player);
+        Box("Right leg",player.position+new Vector3(.2f,-.82f,0),new Vector3(.21f,.48f,.25f),dark,player);
         // Child meshes retain their world positions; move root only after creation.
         var cameraGo = new GameObject("Camera"); cam = cameraGo.AddComponent<Camera>();
-        cam.transform.position = new Vector3(0,17,-14);
-        cam.transform.rotation = Quaternion.Euler(48,0,0);
-        cam.fieldOfView = 52; cam.backgroundColor = new Color(.12f,.11f,.2f);
+        cam.transform.position = new Vector3(0,16,-14);
+        cam.transform.rotation = Quaternion.Euler(49,0,0);
+        cam.fieldOfView = 55; cam.backgroundColor = new Color(.045f,.045f,.05f);
         cameraGo.tag = "MainCamera";
         var sun = new GameObject("Soft light").AddComponent<Light>();
-        sun.type = LightType.Directional; sun.intensity = 1.35f;
+        sun.type = LightType.Directional; sun.intensity = .85f;
+        sun.color=new Color(1f,.85f,.7f);
         sun.transform.rotation = Quaternion.Euler(50,-25,0);
         Spawn();
+    }
+    void Sign(string content,Vector3 pos,float size,Material material)
+    {
+        var label=new GameObject("Interior sign: "+content).AddComponent<TextMesh>();
+        label.text=content;label.fontSize=64;label.characterSize=size/6f;
+        label.anchor=TextAnchor.MiddleCenter;label.alignment=TextAlignment.Center;
+        label.color=material.color;label.transform.position=pos;
+        label.transform.rotation=Quaternion.Euler(0,180,0);
     }
     void Spawn()
     {
         if(customers.Count>=4) return;
         var t = new GameObject("Customer").transform;
         t.position = new Vector3(3.7f, .85f, -6.8f);
-        var color = Mat(Color.HSVToRGB(Random.value,.52f,.95f));
-        Box("Body", t.position, new Vector3(.8f,1.25f,.7f), color, t);
-        Sphere("Head", t.position + Vector3.up*.87f, Vector3.one*.64f, amber, t);
+        var color = Mat(Color.HSVToRGB(Random.value,.22f,.48f));
+        Box("Coat", t.position, new Vector3(.68f,1.25f,.5f), color, t);
+        Sphere("Head", t.position + Vector3.up*.87f, Vector3.one*.57f, amber, t);
+        Box("Left leg",t.position+new Vector3(-.19f,-.74f,0),new Vector3(.18f,.42f,.23f),dark,t);
+        Box("Right leg",t.position+new Vector3(.19f,-.74f,0),new Vector3(.18f,.42f,.23f),dark,t);
         customers.Add(new Customer { body = t, patience = 32 });
     }
     void Update()
@@ -147,15 +189,23 @@ public class FoodStreetGame : MonoBehaviour
     void OnGUI()
     {
         float s=Mathf.Clamp(Screen.width/430f,.75f,1.6f);
-        var title=new GUIStyle(GUI.skin.label) {fontSize=Mathf.RoundToInt(24*s),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleCenter};
-        title.normal.textColor=Color.white;
-        var small=new GUIStyle(title) {fontSize=Mathf.RoundToInt(16*s)};
-        GUI.Box(new Rect(12,10,Screen.width-24,94*s),"");
-        GUI.Label(new Rect(15,12,Screen.width-30,35*s),"FOOD STREET  •  PIZZA SHOP",title);
-        GUI.Label(new Rect(15,48*s,Screen.width-30,40*s),"Cash $"+cash+"     Pizza "+ready+"/"+capacity+"     Served "+served,small);
-        if(Time.time<toastUntil) GUI.Label(new Rect(0,Screen.height*.60f,Screen.width,40*s),toast,small);
-        GUI.Label(new Rect(0,Screen.height*.72f,Screen.width,85*s),
-            "MOVE: drag left side / WASD\nPINK: cook   •   GOLD: serve\nGREEN: upgrade $"+upgradeCost,small);
+        var title=new GUIStyle(GUI.skin.label) {fontSize=Mathf.RoundToInt(22*s),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft};
+        title.normal.textColor=new Color(.95f,.83f,.6f);
+        var small=new GUIStyle(GUI.skin.label) {fontSize=Mathf.RoundToInt(14*s),alignment=TextAnchor.MiddleLeft,wordWrap=true};
+        small.normal.textColor=new Color(.91f,.9f,.83f);
+        var centered=new GUIStyle(small) {alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold};
+        GUI.DrawTexture(new Rect(0,0,Screen.width,110*s),panelTexture);
+        GUI.Label(new Rect(20*s,8*s,Screen.width-40*s,35*s),"FOOD STREET",title);
+        GUI.Label(new Rect(20*s,42*s,Screen.width-40*s,28*s),"THE NIGHT MARKET  /  PIZZA KITCHEN",small);
+        GUI.Label(new Rect(20*s,71*s,Screen.width-40*s,29*s),"$"+cash+" CASH     "+ready+"/"+capacity+" READY     "+served+" SERVED",small);
+        if(Time.time<toastUntil)
+        {
+            GUI.DrawTexture(new Rect(0,Screen.height*.61f,Screen.width,42*s),panelTexture);
+            GUI.Label(new Rect(0,Screen.height*.61f,Screen.width,42*s),toast,centered);
+        }
+        GUI.DrawTexture(new Rect(0,Screen.height-100*s,Screen.width,100*s),panelTexture);
+        GUI.Label(new Rect(18*s,Screen.height-98*s,Screen.width-36*s,85*s),
+            "DRAG TO MOVE   •   PINK COUNTER: COOK\nGOLD COUNTER: SERVE   •   REAR PAD: UPGRADE $"+upgradeCost,small);
         if(dragging) GUI.Box(new Rect(joystickOrigin.x-38,Screen.height-joystickOrigin.y-38,76,76),"●");
     }
 }
