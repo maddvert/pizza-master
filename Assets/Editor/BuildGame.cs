@@ -9,7 +9,7 @@ using UnityEngine;
 public static class BuildGame
 {
     // Unity command line: -batchmode -quit -executeMethod BuildGame.Android
-    public static void Android() => Build(BuildTarget.Android, "build/FoodStreet-test.apk");
+    public static void Android() => Build(BuildTarget.Android, "build/PizzaMaster-test.apk");
     public static void Ios() => Build(BuildTarget.iOS, "build/ios");
 
     static void Build(BuildTarget target, string path)
@@ -17,14 +17,14 @@ public static class BuildGame
         CreateScene.Create();
         PlayerSettings.SetApplicationIdentifier(
             target == BuildTarget.Android ? NamedBuildTarget.Android : NamedBuildTarget.iOS,
-            "com.maddvert.foodstreetprototype");
+            "com.maddvert.pizzamaster");
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
         PlayerSettings.Android.useCustomKeystore = false;
         EditorUserBuildSettings.buildAppBundle = false;
         Directory.CreateDirectory("build");
         var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
         {
-            scenes = new[] { "Assets/Scenes/FoodStreet.unity" },
+            scenes = new[] { "Assets/Scenes/PizzaMaster.unity" },
             locationPathName = path,
             target = target,
             options = BuildOptions.None
