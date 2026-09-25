@@ -8,7 +8,7 @@ public sealed class PizzaMasterGame : MonoBehaviour
     readonly List<Guest> line = new List<Guest>();
     Transform player, helper, tray;
     readonly List<GameObject> carriedPizzas = new List<GameObject>();
-    Material cream, tile, tomato, mint, blue, crust, topping, skin, uniform, black, gold;
+    Material cream, tile, tomato, mint, blue, crust, topping, skin, uniform, black, gold, wood, leaf, glass;
     Texture2D panel;
     float spawnClock, cookClock, serveClock, helperClock, messageUntil;
     int money, served, carry, capacity, level, staff, speedLevel;
@@ -57,6 +57,51 @@ public sealed class PizzaMasterGame : MonoBehaviour
         mesh.fontSize=64;mesh.characterSize=scale;mesh.color=color;
         mesh.transform.position=pos;mesh.transform.rotation=Quaternion.Euler(0,180,0);
     }
+    void DecorateRestaurant()
+    {
+        // Warm, bright storefront. All decorative geometry is original and generated here.
+        Cube("Left wall",new Vector3(-7.55f,1.3f,0),new Vector3(.15f,2.6f,19.5f),cream);
+        Cube("Right wall",new Vector3(7.55f,1.3f,0),new Vector3(.15f,2.6f,19.5f),cream);
+        Cube("Front entrance strip",new Vector3(0,.12f,-9.6f),new Vector3(14.8f,.08f,.38f),tomato);
+        for(int i=0;i<4;i++)
+        {
+            float x=-5.5f+i*3.7f;
+            Cube("Wall window",new Vector3(x,2.15f,9.62f),new Vector3(2.75f,1.15f,.08f),glass);
+            Cube("Window sill",new Vector3(x,1.52f,9.48f),new Vector3(2.85f,.12f,.3f),wood);
+        }
+        // A striped awning marks the shop, and two planter rows soften the entrance.
+        for(int i=0;i<8;i++)
+            Cube("Awning stripe",new Vector3(-6.25f+i*1.8f,4.4f,8.6f),
+                new Vector3(1.8f,.16f,1.6f),i%2==0?tomato:uniform);
+        for(int i=0;i<4;i++)
+        {
+            float z=-7+i*4.1f;
+            foreach(float x in new[]{-6.65f,6.65f})
+            {
+                Cube("Planter",new Vector3(x,.44f,z),new Vector3(.65f,.72f,.65f),wood);
+                Ball("Herb",new Vector3(x,.93f,z),new Vector3(.8f,.85f,.8f),leaf);
+            }
+        }
+        // Distinct preparation table and service counter make the route legible.
+        Cube("Prep table",new Vector3(-3.8f,.65f,5.25f),new Vector3(3.1f,.16f,1.25f),wood);
+        for(int i=0;i<3;i++)
+        {
+            float x=-4.5f+i*.7f;
+            var dough=Ball("Fresh dough",new Vector3(x,.81f,5.25f),new Vector3(.48f,.09f,.48f),crust);
+            Ball("Sauce",dough.position+Vector3.up*.05f,new Vector3(.35f,.035f,.35f),topping);
+        }
+        Cube("Cash register",new Vector3(3.8f,1.22f,2.9f),new Vector3(.66f,.32f,.43f),black);
+        Cube("Register screen",new Vector3(3.8f,1.34f,2.67f),new Vector3(.46f,.17f,.03f),glass);
+        for(int i=0;i<3;i++)
+        {
+            float x=1.45f+i*2.35f;
+            Cube("Dining table",new Vector3(x,.65f,6.3f),new Vector3(1.25f,.12f,1.15f),wood);
+            Cube("Dining table leg",new Vector3(x,.35f,6.3f),new Vector3(.14f,.55f,.14f),black);
+            Cube("Dining stool",new Vector3(x,.38f,5.12f),new Vector3(.6f,.15f,.6f),mint);
+        }
+        Label("BAKE",new Vector3(-3.8f,.26f,.75f),Color.white,.045f);
+        Label("SERVE",new Vector3(3.8f,.26f,.75f),Color.white,.045f);
+    }
     void Start()
     {
         Application.targetFrameRate=60;
@@ -75,7 +120,9 @@ public sealed class PizzaMasterGame : MonoBehaviour
         blue=Make(new Color(.4f,.67f,.78f));crust=Make(new Color(.93f,.66f,.32f));
         topping=Make(new Color(.67f,.13f,.11f));skin=Make(new Color(.81f,.55f,.37f));
         uniform=Make(new Color(.95f,.95f,.89f));black=Make(new Color(.23f,.26f,.29f));
-        gold=Make(new Color(.98f,.78f,.27f));RenderSettings.ambientLight=new Color(.85f,.84f,.8f);
+        gold=Make(new Color(.98f,.78f,.27f));wood=Make(new Color(.69f,.42f,.27f));
+        leaf=Make(new Color(.22f,.57f,.32f));glass=Make(new Color(.62f,.85f,.94f));
+        RenderSettings.ambientLight=new Color(.85f,.84f,.8f);
         Cube("Light restaurant floor",Vector3.zero,new Vector3(15,.2f,20),cream);
         for(int x=-6;x<=6;x+=2)for(int z=-8;z<=8;z+=2)
             Cube("Floor tile",new Vector3(x,.115f,z),new Vector3(1.94f,.02f,1.94f),tile);
@@ -92,10 +139,12 @@ public sealed class PizzaMasterGame : MonoBehaviour
         Cube("Tray upgrade",new Vector3(-4,.16f,-5.2f),new Vector3(2.35f,.08f,1.8f),gold);
         Cube("Staff hiring",new Vector3(0,.16f,-5.2f),new Vector3(2.35f,.08f,1.8f),mint);
         Cube("Kitchen upgrade",new Vector3(4,.16f,-5.2f),new Vector3(2.35f,.08f,1.8f),tomato);
+        DecorateRestaurant();
         for(int n=0;n<3;n++)
         {
             var p=Ball("Pizza",new Vector3(-4.45f+n*.65f,1.13f,2.8f),new Vector3(.55f,.09f,.55f),crust);
             Ball("Sauce",p.position+Vector3.up*.06f,new Vector3(.42f,.04f,.42f),topping);
+            Ball("Basil",p.position+new Vector3(.12f,.095f,.1f),new Vector3(.09f,.03f,.12f),leaf);
         }
         player=Person("Player",new Vector3(0,.83f,-1.7f),tomato);
         Cube("Apron",player.position+new Vector3(0,-.06f,-.25f),new Vector3(.5f,.7f,.05f),uniform,player);
@@ -152,8 +201,10 @@ public sealed class PizzaMasterGame : MonoBehaviour
         {
             var pizza=Ball("Carried pizza",tray.position+new Vector3(0,.09f+i*.11f,0),
                 new Vector3(.55f,.08f,.55f),crust,tray);
-            var sauce=Ball("Tomato sauce",pizza.position+Vector3.up*.045f,
+            Ball("Tomato sauce",pizza.position+Vector3.up*.045f,
                 new Vector3(.43f,.025f,.43f),topping,pizza);
+            Ball("Basil",pizza.position+new Vector3(.12f,.065f,.08f),
+                new Vector3(.08f,.025f,.11f),leaf,pizza);
             carriedPizzas.Add(pizza.gameObject);
         }
     }
@@ -235,6 +286,12 @@ public sealed class PizzaMasterGame : MonoBehaviour
         GUI.Label(new Rect(16*s,5*s,Screen.width-32*s,39*s),"PIZZA MASTER",head);
         GUI.Label(new Rect(16*s,43*s,Screen.width-32*s,25*s),"SHOP "+level+"     $"+money+" CASH     "+served+" SERVED",body);
         GUI.Label(new Rect(16*s,70*s,Screen.width-32*s,29*s),"TRAY "+carry+"/"+capacity+"     STAFF "+staff+"     QUEUE "+line.Count,body);
+        if(cookClock>0)
+        {
+            float duration=Mathf.Max(.9f,2.6f-speedLevel*.35f);
+            GUI.DrawTexture(new Rect(16*s,106*s,(Screen.width-32*s)*Mathf.Clamp01(cookClock/duration),7*s),panel);
+            GUI.Label(new Rect(16*s,114*s,Screen.width-32*s,24*s),"BAKING PIZZA...",body);
+        }
         if(Time.time<messageUntil)
         {GUI.DrawTexture(new Rect(0,Screen.height*.58f,Screen.width,39*s),panel);
         GUI.Label(new Rect(0,Screen.height*.58f,Screen.width,39*s),message,center);}
