@@ -55,7 +55,8 @@ public sealed class PizzaMasterGame : MonoBehaviour
         var mesh=new GameObject(text).AddComponent<TextMesh>();
         mesh.text=text;mesh.anchor=TextAnchor.MiddleCenter;mesh.alignment=TextAlignment.Center;
         mesh.fontSize=64;mesh.characterSize=scale;mesh.color=color;
-        mesh.transform.position=pos;mesh.transform.rotation=Quaternion.Euler(0,180,0);
+        mesh.transform.position=pos;
+        mesh.transform.rotation=Quaternion.identity;
     }
     void DecorateRestaurant()
     {
@@ -227,7 +228,9 @@ public sealed class PizzaMasterGame : MonoBehaviour
             else{dragNow=t.position;input=Vector2.ClampMagnitude((dragNow-dragStart)/90f,1);}
         }
         if(Input.touchCount==0 && !Input.GetMouseButton(0))dragFinger=-1;
-        Vector3 goal=new Vector3(input.x,0,input.y);
+        // The camera looks into the restaurant from the entrance. Match drag-up
+        // to the player's forward route as seen on the phone.
+        Vector3 goal=new Vector3(input.x,0,-input.y);
         velocity=Vector3.Lerp(velocity,goal*5.2f,Mathf.Clamp01(dt*10));
         player.position+=velocity*dt;
         player.position=new Vector3(Mathf.Clamp(player.position.x,-6.9f,6.9f),.83f,Mathf.Clamp(player.position.z,-8.7f,7f));
@@ -277,26 +280,37 @@ public sealed class PizzaMasterGame : MonoBehaviour
     void OnGUI()
     {
         float s=Mathf.Clamp(Screen.width/420f,.8f,1.65f);
-        var head=new GUIStyle(GUI.skin.label){fontSize=Mathf.RoundToInt(24*s),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft};
-        head.normal.textColor=new Color(.76f,.2f,.14f);
-        var body=new GUIStyle(GUI.skin.label){fontSize=Mathf.RoundToInt(14*s),alignment=TextAnchor.MiddleLeft,wordWrap=true};
-        body.normal.textColor=new Color(.22f,.26f,.27f);
+        var body=new GUIStyle(GUI.skin.label){fontSize=Mathf.RoundToInt(14*s),fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft};
+        body.normal.textColor=Color.white;
         var center=new GUIStyle(body){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold};
-        GUI.DrawTexture(new Rect(0,0,Screen.width,108*s),panel);
-        GUI.Label(new Rect(16*s,5*s,Screen.width-32*s,39*s),"PIZZA MASTER",head);
-        GUI.Label(new Rect(16*s,43*s,Screen.width-32*s,25*s),"SHOP "+level+"     $"+money+" CASH     "+served+" SERVED",body);
-        GUI.Label(new Rect(16*s,70*s,Screen.width-32*s,29*s),"TRAY "+carry+"/"+capacity+"     STAFF "+staff+"     QUEUE "+line.Count,body);
+        var white=new GUIStyle(body){alignment=TextAnchor.MiddleCenter};
+        white.normal.textColor=new Color(.25f,.24f,.22f);
+        var header=new Rect(12*s,10*s,Screen.width-24*s,48*s);
+        var oldColor=GUI.color;
+        GUI.color=new Color(.18f,.18f,.2f,.86f);GUI.DrawTexture(header,Texture2D.whiteTexture);
+        GUI.color=oldColor;
+        GUI.Label(new Rect(24*s,15*s,Screen.width-48*s,36*s),
+            "$"+money+"    LEVEL "+level+"    PIZZA "+carry+"/"+capacity+"    QUEUE "+line.Count,body);
         if(cookClock>0)
         {
             float duration=Mathf.Max(.9f,2.6f-speedLevel*.35f);
-            GUI.DrawTexture(new Rect(16*s,106*s,(Screen.width-32*s)*Mathf.Clamp01(cookClock/duration),7*s),panel);
-            GUI.Label(new Rect(16*s,114*s,Screen.width-32*s,24*s),"BAKING PIZZA...",body);
+            GUI.color=new Color(.96f,.65f,.2f);
+            GUI.DrawTexture(new Rect(12*s,61*s,(Screen.width-24*s)*Mathf.Clamp01(cookClock/duration),7*s),Texture2D.whiteTexture);
+            GUI.color=oldColor;
         }
         if(Time.time<messageUntil)
-        {GUI.DrawTexture(new Rect(0,Screen.height*.58f,Screen.width,39*s),panel);
-        GUI.Label(new Rect(0,Screen.height*.58f,Screen.width,39*s),message,center);}
-        GUI.DrawTexture(new Rect(0,Screen.height-92*s,Screen.width,92*s),panel);
-        GUI.Label(new Rect(16*s,Screen.height-89*s,Screen.width-32*s,79*s),
-            "DRAG TO MOVE  •  RED: BAKE  •  BLUE: SERVE\nUPGRADES: TRAY $"+(capacity*15)+"  •  STAFF $"+(40+staff*35)+"  •  OVEN $"+(50+speedLevel*35),body);
+        {
+            GUI.color=new Color(.18f,.18f,.2f,.8f);
+            GUI.DrawTexture(new Rect(24*s,Screen.height*.74f,Screen.width-48*s,38*s),Texture2D.whiteTexture);
+            GUI.color=oldColor;
+            GUI.Label(new Rect(24*s,Screen.height*.74f,Screen.width-48*s,38*s),message,center);
+        }
+        if(Time.time<8f)
+        {
+            GUI.color=new Color(1f,1f,1f,.85f);
+            GUI.DrawTexture(new Rect(35*s,Screen.height-59*s,Screen.width-70*s,38*s),Texture2D.whiteTexture);
+            GUI.color=oldColor;
+            GUI.Label(new Rect(35*s,Screen.height-59*s,Screen.width-70*s,38*s),"DRAG TO MOVE · RED: BAKE · BLUE: SERVE",white);
+        }
     }
 }
