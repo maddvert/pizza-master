@@ -1,6 +1,8 @@
 @echo off
 setlocal
 set "PROJECT=%~dp0"
+rem %~dp0 ends with a backslash; remove it before passing a quoted path to Unity.
+set "PROJECT=%PROJECT:~0,-1%"
 set "UNITY_EDITOR=C:\Program Files\Unity\Hub\Editor\2022.3.62f1\Editor\Unity.exe"
 set "ANDROID_MODULE=C:\Program Files\Unity\Hub\Editor\2022.3.62f1\Editor\Data\PlaybackEngines\AndroidPlayer"
 
@@ -16,17 +18,17 @@ if not exist "%ANDROID_MODULE%" (
 )
 
 echo Building Pizza Master test APK. This can take several minutes on first run.
-"%UNITY_EDITOR%" -batchmode -nographics -quit -projectPath "%PROJECT%" -buildTarget Android -executeMethod BuildGame.Android -logFile "%PROJECT%build-android.log"
+"%UNITY_EDITOR%" -batchmode -nographics -quit -projectPath "%PROJECT%" -buildTarget Android -executeMethod BuildGame.Android -logFile "%PROJECT%\build-android.log"
 set "BUILD_RESULT=%ERRORLEVEL%"
 if not "%BUILD_RESULT%"=="0" (
   echo Build failed. Open build-android.log and send its last error lines for a fix.
   pause
   exit /b %BUILD_RESULT%
 )
-if not exist "%PROJECT%build\PizzaMaster-test.apk" (
+if not exist "%PROJECT%\build\PizzaMaster-test.apk" (
   echo Unity exited successfully but the APK was not found. Check build-android.log.
   pause
   exit /b 1
 )
-echo APK ready: "%PROJECT%build\PizzaMaster-test.apk"
+echo APK ready: "%PROJECT%\build\PizzaMaster-test.apk"
 pause
